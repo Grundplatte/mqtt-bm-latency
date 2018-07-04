@@ -135,7 +135,7 @@ func main() {
 		select {
 		case <-subDone:
 			subCnt++
-			if subCnt==*clients {
+			if subCnt==*subclients {
 				if !*quiet {
 					log.Printf("all subscribe job done.\n")
 				}
