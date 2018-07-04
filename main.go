@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"strconv"
 	"encoding/json"
 	"flag"
 	"fmt"
