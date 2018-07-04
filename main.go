@@ -92,13 +92,17 @@ func main() {
 		subqos      = flag.Int("subqos", 1, "QoS for subscribed messages")
 		size     = flag.Int("size", 100, "Size of the messages payload (bytes)")
 		count    = flag.Int("count", 100, "Number of messages to send per pubclient")
-		clients  = flag.Int("clients", 10, "Number of clients pair to start")
+		subclients  = flag.Int("subclients", 10, "Number of subscribing clients")
+		pubclients = flag.Int("pubclients", 10, "Number of publishing clients")
 		format   = flag.String("format", "text", "Output format: text|json")
 		quiet    = flag.Bool("quiet", false, "Suppress logs while running")
 	)
 
 	flag.Parse()
-	if *clients < 1 {
+	if *subclients < 1 {
+		log.Fatal("Invlalid arguments")
+	}
+	if *pubclients < 1 {
 		log.Fatal("Invlalid arguments")
 	}
 
@@ -112,8 +116,8 @@ func main() {
 	if !*quiet {
 		log.Printf("Starting subscribe..\n")
 	}
-	
-	for i := 0; i < *clients; i++ {
+
+	for i := 0; i < *subclients; i++ {
 		sub := &SubClient{
 			ID:         i,
 			BrokerURL:  *broker,
@@ -146,7 +150,7 @@ func main() {
 	}
 	pubResCh := make(chan *PubResults)
 	start := time.Now()
-	for i := 0; i < *clients; i++ {
+	for i := 0; i < *pubclients; i++ {
 		c := &PubClient{
 			ID:         i,
 			BrokerURL:  *broker,
@@ -162,8 +166,8 @@ func main() {
 	}
 
 	// collect the publish results
-	pubresults := make([]*PubResults, *clients)
-	for i := 0; i < *clients; i++ {
+	pubresults := make([]*PubResults, *pubclients)
+	for i := 0; i < *pubclients; i++ {
 		pubresults[i] = <-pubResCh
 	}
 	totalTime := time.Now().Sub(start)
@@ -177,13 +181,13 @@ func main() {
 	}
 
 	// notify subscriber that job done
-	for i := 0; i < *clients; i++ {
+	for i := 0; i < *subclients; i++ {
 		jobDone <- true
 	}
 
 	// collect subscribe results
-	subresults := make([]*SubResults, *clients)
-	for i := 0; i < *clients; i++ {
+	subresults := make([]*SubResults, *subclients)
+	for i := 0; i < *subclients; i++ {
 		subresults[i] = <-subResCh
 	}
 
